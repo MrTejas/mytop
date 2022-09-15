@@ -1,0 +1,64 @@
+Uptime, IdleTime and Idle percentage
+Command : cat proc/uptime
+
+memory information
+Command : cat /proc/meminfo
+
+* Swap memory info
+* RAM memory info
+
+system information
+command : uname
+options : -s -r -v ect.
+
+       -a, --all
+              print  all  information,  in the following order, except omit -p and -i if
+              unknown:
+
+       -s, --kernel-name
+              print the kernel name
+
+       -n, --nodename
+              print the network node hostname
+
+       -r, --kernel-release
+              print the kernel release
+
+       -v, --kernel-version
+              print the kernel version
+
+       -m, --machine
+              print the machine hardware name
+
+       -p, --processor
+              print the processor type (non-portable)
+
+       -i, --hardware-platform
+              print the hardware platform (non-portable)
+
+       -o, --operating-system
+              print the operating system
+
+       --help display this help and exit
+
+       --version
+              output version information and exit
+
+
+power and battery commands/files
+Command : cat /sys/class/power_supply/ACAD/uevent
+To get power plugged on or off
+
+
+Command : cat sys/class/power_supply/BAT1/status (alternative to above)
+Command : cat /sys/class/power_supply/BAT1/capacity (to get battery percentage)
+Command : cat /sys/class/power_supply/BAT1/capacity_level (to get battery level)
+Command : cat /sys/class/power_supply/BAT1/uevent (to get all details)
+
+
+CPU usage
+Command : cat /proc/loadavg
+Output : CPU usage in the last minute, last five minutes, and last 10 minutes, as well as the number of currently running processes.
+
+Zombie Proccesses
+For example, if you want to hunt for zombie processes, you could scan all numbered directories and check whether “(Z) Zombie” appears in the /status file

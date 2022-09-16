@@ -1,11 +1,10 @@
-Uptime, IdleTime and Idle percentage
-Command : cat proc/uptime
+Uptime, IdleTime and Idle percentage___________________DONE
+Command : cat proc/uptime______________________________
 
-memory information
-Command : cat /proc/meminfo
-
-* Swap memory info
-* RAM memory info
+memory information____________________________________
+Command : cat /proc/meminfo___________________________DONE
+* Swap memory info____________________________________
+* RAM memory info_____________________________________
 
 system information
 command : uname
@@ -62,3 +61,6 @@ Output : CPU usage in the last minute, last five minutes, and last 10 minutes, a
 
 Zombie Proccesses
 For example, if you want to hunt for zombie processes, you could scan all numbered directories and check whether “(Z) Zombie” appears in the /status file
+
+
+System Name : tejas@nimbostratus

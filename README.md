@@ -12,7 +12,6 @@ A terminal based top program build in C. Current Features include :-
 Future Features to be added :-
 * System Information (Kernel,machine,os name)
 * Processes running and their attributes
-* Power information
 * Zombie Processes
 * CPU Usage
 

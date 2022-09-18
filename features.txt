@@ -45,17 +45,17 @@ options : -s -r -v ect.
 
 
 power and battery commands/files
-Command : cat /sys/class/power_supply/ACAD/uevent
-To get power plugged on or off
+Command : cat /sys/class/power_supply/ACAD/uevent________________________________________________
+To get power plugged on or off_______________________________________________________DONE________
 
 
-Command : cat sys/class/power_supply/BAT1/status (alternative to above)
-Command : cat /sys/class/power_supply/BAT1/capacity (to get battery percentage)
-Command : cat /sys/class/power_supply/BAT1/capacity_level (to get battery level)
-Command : cat /sys/class/power_supply/BAT1/uevent (to get all details)
+Command : cat sys/class/power_supply/BAT1/status (alternative to above)________________________________
+Command : cat /sys/class/power_supply/BAT1/capacity (to get battery percentage)________________________________
+Command : cat /sys/class/power_supply/BAT1/capacity_level (to get battery level)________________________________
+Command : cat /sys/class/power_supply/BAT1/uevent (to get all details)________________________________
 
 
-CPU usage
+CPU usage (core wise)
 Command : cat /proc/loadavg
 Output : CPU usage in the last minute, last five minutes, and last 10 minutes, as well as the number of currently running processes.
 

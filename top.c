@@ -25,6 +25,36 @@ int num_cores;
 // check for file pointer to be null
 // dont forget to close all the file pointers in the ends
 
+// returns battery level, percentage and charging/discharging state
+void getBatteryStats(int* percentage, char* charging, char* level)
+{
+    FILE* bat1;
+    FILE* bat2;
+    FILE* bat3;
+    bat1 = fopen("/sys/class/power_supply/BAT1/capacity","r");
+    bat2 = fopen("/sys/class/power_supply/BAT1/status","r");
+    bat3 = fopen("/sys/class/power_supply/BAT1/capacity_level","r");
+    if(bat1==NULL || bat2==NULL || bat3==NULL)
+    {
+        *percentage = -1;
+        charging = NULL;
+        level = NULL;
+        return;
+    }
+    char line1[256],line2[256],line3[256];
+    fgets(line1,sizeof(line1),bat1);
+    sscanf(line1,"%d",percentage);
+
+    fgets(line2,sizeof(line2),bat2);
+    sscanf(line2,"%s",charging);
+
+    fgets(line3,sizeof(line3),bat3);
+    sscanf(line3,"%s",level);
+
+    fclose(bat1);
+    fclose(bat2);
+    fclose(bat3);    
+}
 
 // returns the total number of cores in the machine
 int getNumCores()
@@ -164,6 +194,14 @@ int main ()
             float swu = ((float)(mem[2]-mem[3])/BTOG);
             printf("Memory used :\t%.2f/%.2f GB\n",ru,rt);
             printf("Swap used   :\t%.2f/%.2f GB\n",swu,swt);
+
+            // battery stats
+            char bat_level[20];
+            char bat_status[20];
+            int bat_percentage;
+            getBatteryStats(&bat_percentage,bat_status,bat_level);
+            printf("\nBattery Stats : %s - %d%% (%s)\n",bat_status,bat_percentage,bat_level);
+            
         }
     }
 

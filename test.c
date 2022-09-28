@@ -18,10 +18,30 @@ typedef long long ll;
 typedef long double ld;
 
 
+void read_ints (const char* file_name)
+{
+    FILE* file = fopen (file_name, "r");
+    ll i = 0;
+    char str[20];
+    int count=0;  
+
+    fscanf (file, "%lld", &i);  
+    fscanf (file, "%s", str);
+    fscanf (file, "%s", str);
+    while (!feof (file))
+    {  
+        printf ("%lld\t\t\t%d\n", i,count);
+        count++;
+        fscanf (file, "%lld", &i);      
+    }
+    fclose (file);        
+}
+
 int main()
 {
     printf("\e[?25h");
-
+    read_ints("/proc/4378/stat");
 
     return 0;
 }
+

@@ -57,6 +57,7 @@ Command : cat /sys/class/power_supply/BAT1/uevent (to get all details)__________
 
 CPU usage (core wise)
 Command : cat /proc/loadavg
+Command : cat /proc/stat (better as it gives core wise usage) 
 Output : CPU usage in the last minute, last five minutes, and last 10 minutes, as well as the number of currently running processes.
 
 Zombie Proccesses

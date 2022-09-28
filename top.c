@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/param.h>
+
 
 // defining colours
 #define KNRM  "\x1B[0m"
@@ -16,14 +20,72 @@
 // bytes to gigs convertor const
 #define BTOG 1048576
 
+// double ticks = sysconf( _SC_CLK_TCK );
 typedef long long ll;
 typedef long double ld;
+typedef struct process* proc;
 const int refresh_rate = 1;
 int num_cores;
 
 
 // check for file pointer to be null
 // dont forget to close all the file pointers in the ends
+
+struct process 
+{
+    char command[20]; // command that opened the process
+    char name[20];
+    char state[2];
+    int pid; // pid of the process
+    int ppid; // pid of the parent of the process
+    double mem; //memory percentage used by the process
+    double cpu; //cpu percentage used by the process
+    ll upt; //uptime of the process
+};
+
+
+// to work upon
+void updateProcess(int pid)
+{
+    char path[20] = "/proc/";
+    char str[10];
+    // itoa(pid,str,10);
+    sprintf(str,"%d",pid);
+    printf("pid in strinf : %s\n",str);
+    strcat(path,str);
+    printf("pid in strinf : %s\n",path);
+    
+    strcat(path,"/stat");
+    printf("ck2\n");
+    FILE* fp;
+    fp = fopen(path,"r");
+    printf("path = %s\n",path);
+
+    // fp = fopen("/proc/4378/stat","r");
+
+    char tcc[20];
+    int tint;
+    printf("ch3\n");
+    ll i = 0;
+    char strr[20];
+    int count=0;  
+
+    fscanf (fp, "%lld", &i);  
+    printf("ck4\n");
+    fscanf (fp, "%s", strr);
+    fscanf (fp, "%s", strr);
+    while (!feof (fp))
+    {  
+        printf ("%lld\t\t\t%d\n", i,count);
+        // here we have got the count(th) integer in the file
+        count++;
+        fscanf (fp, "%lld", &i);      
+    }
+    fclose (fp);  
+    
+}
+
+
 
 // returns battery level, percentage and charging/discharging state
 void getBatteryStats(int* percentage, char* charging, char* level)
@@ -150,8 +212,10 @@ int* getUptimes()
 }
 
 
+
+
 // main method
-int main ()
+int main1 ()
 {
     // hiding the console cursor
     printf("\33[?25l");
@@ -211,13 +275,11 @@ int main ()
 }
 
 
-// int main()
-// {
-//     ll* ar = getMemInfo();
-//     for(int x=0;x<4;x++)
-//     {
-//         printf("%lld\n",ar[x]);
-//     }
-//     return 0;
+int main()
+{
+    // proc P = (proc)malloc(sizeof(struct process));
+    printf("ck1\n");
+    updateProcess(4378);
+    return 0;
 
-// }
+}

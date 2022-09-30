@@ -33,9 +33,9 @@ int num_cores;
 
 struct process 
 {
-    char command[20]; // command that opened the process
-    char name[20];
-    char state[2];
+    char* command; // command that opened the process
+    char* name;  
+    char* state;
     int pid; // pid of the process
     int ppid; // pid of the parent of the process
     double mem; //memory percentage used by the process
@@ -44,47 +44,98 @@ struct process
 };
 
 
+proc createProcess(int pid)
+{
+    proc P = (proc)malloc(sizeof(struct process));
+    if(P==NULL)
+    {
+        printf("unable to create struct!\n");
+        return NULL;
+    }
+    char nil[20]="nil";
+    P->cpu=-1;
+    P->mem=-1;
+    P->pid=pid;
+    P->ppid=-1;
+    P->upt=0;
+    P->command = (char*)malloc(20*sizeof(char));
+    P->name = (char*)malloc(20*sizeof(char));
+    P->state = (char*)malloc(5*sizeof(char));
+
+    return P;
+}
+
+
 // to work upon
-void updateProcess(int pid)
+void updateProcess(int pid, proc P)
 {
     char path[20] = "/proc/";
     char str[10];
-    // itoa(pid,str,10);
     sprintf(str,"%d",pid);
-    printf("pid in strinf : %s\n",str);
     strcat(path,str);
-    printf("pid in strinf : %s\n",path);
-    
     strcat(path,"/stat");
-    printf("ck2\n");
     FILE* fp;
     fp = fopen(path,"r");
-    printf("path = %s\n",path);
+    // printf("path = %s\n",path);
 
+    char line[256];
+    fgets(line,sizeof(line),fp);
+    char temp[10];
+    sscanf(line,"%s%s%s",temp,P->name,P->state);
+
+    printf("temp = %s\nP->name = %s\nP->state = %s\n",temp,P->name,P->state);
+    
     // fp = fopen("/proc/4378/stat","r");
 
-    char tcc[20];
-    int tint;
     printf("ch3\n");
-    ll i = 0;
+
+    ll val = 0;
     char strr[20];
     int count=0;  
 
-    fscanf (fp, "%lld", &i);  
+    fscanf (fp, "%lld", &val);  
     printf("ck4\n");
     fscanf (fp, "%s", strr);
     fscanf (fp, "%s", strr);
     while (!feof (fp))
     {  
-        printf ("%lld\t\t\t%d\n", i,count);
+        printf("___________________\n");
+        printf ("%lld\t\t\t%d\n", val,count);
         // here we have got the count(th) integer in the file
+        if(count==1)
+        {
+            P->pid=val;
+        }
+
         count++;
-        fscanf (fp, "%lld", &i);      
+        fscanf (fp, "%lld", &val);
     }
     fclose (fp);  
     
 }
 
+void displayProcess(proc P)
+{
+    if(P!=NULL)
+    {
+        printf("************************\n");
+        printf("Displaying Process...\n");
+        printf("pid = %d\nppid = %d\nmem = %f\ncpu = %f\n",P->pid,P->ppid,P->mem,P->cpu);
+        if(P->command!=NULL)
+        {
+            printf("command : %s\n",P->command);
+        }
+        if(P->name!=NULL)
+        {
+            printf("name : %s\n",P->name);
+        }
+        if(P->state!=NULL)
+        {
+            printf("state : %s\n",P->state);
+        }
+        printf("************************\n");
+    }
+}
 
 
 // returns battery level, percentage and charging/discharging state
@@ -279,7 +330,9 @@ int main()
 {
     // proc P = (proc)malloc(sizeof(struct process));
     printf("ck1\n");
-    updateProcess(4378);
+    proc P = createProcess(4267);
+    updateProcess(4267,P);
+    displayProcess(P);
     return 0;
 
 }

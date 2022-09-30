@@ -40,7 +40,7 @@ void read_ints (const char* file_name)
 int main()
 {
     printf("\e[?25h");
-    read_ints("/proc/4378/stat");
+    read_ints("/proc/4267/stat");
 
     return 0;
 }

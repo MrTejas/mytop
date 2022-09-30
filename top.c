@@ -4,8 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/param.h>
-
+#include <sys/param.h> 
 
 // defining colours
 #define KNRM  "\x1B[0m"
@@ -20,7 +19,6 @@
 // bytes to gigs convertor const
 #define BTOG 1048576
 
-// double ticks = sysconf( _SC_CLK_TCK );
 typedef long long ll;
 typedef long double ld;
 typedef struct process* proc;
@@ -41,6 +39,7 @@ struct process
     double mem; //memory percentage used by the process
     double cpu; //cpu percentage used by the process
     ll upt; //uptime of the process
+    int tty; // the tty terminal process is using
 };
 
 
@@ -58,6 +57,7 @@ proc createProcess(int pid)
     P->pid=pid;
     P->ppid=-1;
     P->upt=0;
+    P->tty=-1;
     P->command = (char*)malloc(20*sizeof(char));
     P->name = (char*)malloc(20*sizeof(char));
     P->state = (char*)malloc(5*sizeof(char));
@@ -89,28 +89,82 @@ void updateProcess(int pid, proc P)
 
     printf("ch3\n");
 
+    fclose(fp);
+    FILE* fpp = fopen(path,"r");
     ll val = 0;
     char strr[20];
     int count=0;  
 
-    fscanf (fp, "%lld", &val);  
+    fscanf (fpp, "%lld", &val);  
     printf("ck4\n");
-    fscanf (fp, "%s", strr);
-    fscanf (fp, "%s", strr);
-    while (!feof (fp))
+    fscanf (fpp, "%s", strr);
+    fscanf (fpp, "%s", strr);
+
+
+    // for calculating the cpu percentage
+    printf("ck10\n");
+    ll utime,stime,cutime,cstime,starttime;
+    ll ticks = sysconf( _SC_CLK_TCK );
+    printf("ticks = %lld\n",ticks);
+    FILE* ut = fopen("/proc/uptime","r");
+    ld upt;
+    fscanf(ut,"%Lf",&upt);
+    printf("uptime = %Lf\n",upt);
+    fclose(ut);
+
+
+    while (!feof (fpp))
     {  
-        printf("___________________\n");
-        printf ("%lld\t\t\t%d\n", val,count);
+        // printf ("%d\t\t\t%lld\n", count,val);
         // here we have got the count(th) integer in the file
-        if(count==1)
+        if(count==0)
         {
             P->pid=val;
         }
+        else if(count==3)
+        {
+            P->ppid=val;
+        }
+        else if(count==6)
+        {
+            P->tty=val;
+        }
+        else if(count==13)
+        {
+            utime=val;
+            printf("count = %d\tval = %lld\n",count+1,val);
+        }
+        else if(count==14)
+        {
+            stime=val;
+            printf("count = %d\tval = %lld\n",count+1,val);
+        }
+        else if(count==15)
+        {
+            cutime=val;
+            printf("count = %d\tval = %lld\n",count+1,val);
+        }
+        else if(count==16)
+        {
+            cstime=val;
+            printf("count = %d\tval = %lld\n",count+1,val);
+        }
+        else if(count==21)
+        {
+            starttime=val;
+            printf("count = %d\tval = %lld\n",count+1,val);
+        }
+
+        // cpu percentage calculation
+        ld  total_time=utime+stime+cutime+cstime;
+        ld seconds = upt - (starttime/(ld)ticks);
+        P->cpu = 100*((total_time/(ld)ticks)/(ld)seconds);
+        
 
         count++;
-        fscanf (fp, "%lld", &val);
+        fscanf (fpp, "%lld", &val);
     }
-    fclose (fp);  
+    fclose (fpp);  
     
 }
 
@@ -121,6 +175,7 @@ void displayProcess(proc P)
         printf("************************\n");
         printf("Displaying Process...\n");
         printf("pid = %d\nppid = %d\nmem = %f\ncpu = %f\n",P->pid,P->ppid,P->mem,P->cpu);
+        printf("tty = %d\n",P->tty);
         if(P->command!=NULL)
         {
             printf("command : %s\n",P->command);
@@ -330,8 +385,9 @@ int main()
 {
     // proc P = (proc)malloc(sizeof(struct process));
     printf("ck1\n");
-    proc P = createProcess(4267);
-    updateProcess(4267,P);
+    proc P = createProcess(2728);
+    printf("ck2\n");
+    updateProcess(2728,P);
     displayProcess(P);
     return 0;
 

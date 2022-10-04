@@ -38,8 +38,9 @@ struct process
     int ppid; // pid of the parent of the process
     double mem; //memory percentage used by the process
     double cpu; //cpu percentage used by the process
-    ll upt; //uptime of the process
     int tty; // the tty terminal process is using
+    ll time; // stores the running time of the process in seconds
+    int priority; // stores the priority for realtime/non realtime scheduled processes
 };
 
 
@@ -56,11 +57,12 @@ proc createProcess(int pid)
     P->mem=-1;
     P->pid=pid;
     P->ppid=-1;
-    P->upt=0;
     P->tty=-1;
     P->command = (char*)malloc(20*sizeof(char));
     P->name = (char*)malloc(20*sizeof(char));
     P->state = (char*)malloc(5*sizeof(char));
+    P->time=-1;
+    P->priority=101;
 
     return P;
 }
@@ -103,13 +105,13 @@ void updateProcess(int pid, proc P)
 
     // for calculating the cpu percentage
     printf("ck10\n");
-    ll utime,stime,cutime,cstime,starttime;
-    ll ticks = sysconf( _SC_CLK_TCK );
-    printf("ticks = %lld\n",ticks);
+    ld process_utime,process_stime,process_starttime;
+    ld ticks = sysconf( _SC_CLK_TCK );
+    printf("ticks = %Lf\n",ticks);
     FILE* ut = fopen("/proc/uptime","r");
-    ld upt;
-    fscanf(ut,"%Lf",&upt);
-    printf("uptime = %Lf\n",upt);
+    ld system_uptime;
+    fscanf(ut,"%Lf",&system_uptime);
+    printf("system_uptime = %Lf\n",system_uptime);
     fclose(ut);
 
 
@@ -125,40 +127,38 @@ void updateProcess(int pid, proc P)
         {
             P->ppid=val;
         }
+        else if(count==15)
+        {
+            P->priority=val;
+        }
         else if(count==6)
         {
             P->tty=val;
         }
-        else if(count==13)
+        else if(count==11)
         {
-            utime=val;
-            printf("count = %d\tval = %lld\n",count+1,val);
+            process_utime=val/ticks;
+            printf("count = %d\tval = %lld\n",count,val);
         }
-        else if(count==14)
+        else if(count==12)
         {
-            stime=val;
-            printf("count = %d\tval = %lld\n",count+1,val);
+            process_stime=val/ticks;
+            printf("count = %d\tval = %lld\n",count,val);
         }
-        else if(count==15)
+        else if(count==19)
         {
-            cutime=val;
-            printf("count = %d\tval = %lld\n",count+1,val);
-        }
-        else if(count==16)
-        {
-            cstime=val;
-            printf("count = %d\tval = %lld\n",count+1,val);
-        }
-        else if(count==21)
-        {
-            starttime=val;
-            printf("count = %d\tval = %lld\n",count+1,val);
+            process_starttime=val/ticks;
+            printf("count = %d\tval = %lld\n",count,val);
         }
 
         // cpu percentage calculation
-        ld  total_time=utime+stime+cutime+cstime;
-        ld seconds = upt - (starttime/(ld)ticks);
-        P->cpu = 100*((total_time/(ld)ticks)/(ld)seconds);
+        
+        ld process_elapsed = system_uptime-process_starttime;
+        ld process_used = process_utime + process_stime;
+        ld cpu_percentage = (process_used * 100)/process_elapsed;
+        P->cpu=cpu_percentage;
+        P->time=((ll)process_elapsed);
+        
         
 
         count++;
@@ -172,10 +172,10 @@ void displayProcess(proc P)
 {
     if(P!=NULL)
     {
-        printf("************************\n");
+        printf("\n************************\n");
         printf("Displaying Process...\n");
         printf("pid = %d\nppid = %d\nmem = %f\ncpu = %f\n",P->pid,P->ppid,P->mem,P->cpu);
-        printf("tty = %d\n",P->tty);
+        printf("tty = %d\ntime = %lld s\npriority = %d\n",P->tty,P->time,P->priority);
         if(P->command!=NULL)
         {
             printf("command : %s\n",P->command);
@@ -385,9 +385,9 @@ int main()
 {
     // proc P = (proc)malloc(sizeof(struct process));
     printf("ck1\n");
-    proc P = createProcess(2728);
+    proc P = createProcess(1821);
     printf("ck2\n");
-    updateProcess(2728,P);
+    updateProcess(1821,P);
     displayProcess(P);
     return 0;
 

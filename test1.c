@@ -3,7 +3,7 @@
 #include <dirent.h>
   
 int main(void)
-{
+{         
     struct dirent *de;  // Pointer for directory entry
   
     // opendir() returns a pointer of DIR type. 

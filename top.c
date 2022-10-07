@@ -4,17 +4,18 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/param.h> 
+#include <sys/param.h>
+#include <dirent.h>
 
 // defining colours
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
+#define KNRM  "\033[0m"
+#define KRED  "\033[31m"
+#define KGRN  "\033[32m"
+#define KYEL  "\033[33m"
+#define KBLU  "\033[34m"
+#define KMAG  "\033[35m"
+#define KCYN  "\033[36m"
+#define KWHT  "\033[37m"
 
 // bytes to gigs convertor const
 #define BTOG 1048576
@@ -442,6 +443,19 @@ int main()
             printf("\n\n");
             printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
             
+            DIR* dr = opendir("/proc");
+            if(dr==NULL)
+            {
+                printf("Error opening /proc\n");
+                return 0;
+            }
+
+            struct dirent* de;
+            while((de = readdir(dr))!=NULL)
+            {
+                printf("%s\n",de->d_name);
+            }
+            closedir(dr);
         }
     }
 

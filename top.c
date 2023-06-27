@@ -106,6 +106,56 @@ proc createProcess(int pid)
     return P;
 }
 
+char* getUsers(int num)
+{
+    FILE* userinfo;
+    userinfo = fopen("/etc/passwd","r");
+    if(userinfo==NULL)
+    {
+        printf("could not open file /etc/passwd\n");
+    }
+    // ll* ar = (ll*)malloc(sizeof(ll)*1001);
+    char line[256];
+    const char deli[] = ":";
+    while(fgets(line,sizeof(line),userinfo))
+    {
+        char word[20];
+        int id = -12;
+        char* token = NULL;
+
+        sscanf(line,"%s",word);
+        sscanf(word,"%*[^0123456789]%d",&id);
+        token = strtok(word,deli);
+
+        // printf("%s and %d\n",token,id);
+        if(id==num)
+        {
+            fclose(userinfo);
+            return token;
+        }
+        // if(strcmp(word,"MemTotal:")==0)
+        // {
+        //     ar[0]=val;
+        // }
+        // else if(strcmp(word,"MemAvailable:")==0)
+        // {
+        //     ar[1]=val;
+        // }
+        // else if(strcmp(word,"SwapTotal:")==0)
+        // {
+        //     ar[2]=val;
+        // }
+        // else if(strcmp(word,"SwapFree:")==0)
+        // {
+        //     ar[3]=val;
+        //     break;
+        // }
+        // printf("word : %s\n",word);
+        // printf("val : %d\n",val);
+    }
+    fclose(userinfo);
+    return NULL;
+}
 
 void getProcessMemory(int pid,ll* res, ll* vm)
 {
@@ -121,6 +171,7 @@ void getProcessMemory(int pid,ll* res, ll* vm)
     if(fp==NULL)
     {
         printf("could not open file %s\n",path);
+        fclose(fp);
         return;
     }
 
@@ -290,14 +341,6 @@ void displayProcess1(proc P)
     }
 }
 
-// n-tab
-void giveSpaces(char* s, int n)
-{
-    int len = strlen(s);
-    ll diff = n-len;
-    for(int x=0;x<diff;x++)
-        printf(" ");
-}
 
 // returns battery level, percentage and charging/discharging state
 void getBatteryStats(int* percentage, char* charging, char* level)
@@ -449,7 +492,11 @@ void displayProcess(proc P)
         }
         {
             printf("%s",KBLU);
-            printf("%d\t",P->user_id);
+            char* usr = getUsers(P->user_id);
+            if(usr==NULL)
+                printf("%d\t",P->user_id);
+            else
+                printf("%s\t",usr);
         }
         {
             if(P->priority==20)
@@ -523,6 +570,15 @@ void displayProcess(proc P)
             int val1 = (int)(up_time/60) - (60*val0); // minutes
             int val2 = (int)(up_time - (60*val1) - (60*60*val0)); // seconds
 
+            // printf("%d:",val0);
+            // printf(val1<10?"0":"");
+            // printf("%d:",val1);
+            // printf(val2<10?"0":"");
+            // printf("%d",val2);
+            printf(FBLD);
+            // printf(KBLU);
+            // printf("UpTime \t\t: ");
+            printf(val0<10?"0":"");
             printf("%d:",val0);
             printf(val1<10?"0":"");
             printf("%d:",val1);
@@ -591,7 +647,7 @@ void displayCPU()
             max=ar[x];
     }
 
-    int X=83,Y=12;
+    int X=88,Y=12;
     gotoxy(X,Y);
     printf("AVG");
     moveup(1);
@@ -650,7 +706,7 @@ void displayCPU()
     // printf("%lc", box);
     
     // printf("total %% = %f\n",ar[0]);
-    gotoxy(1,3);
+    gotoxy(1,1);
     // printf("lala\n");
 }
 
@@ -675,22 +731,39 @@ int main()
             displayCPU();
             // gotoxy(1,1);
             printf(FLIN);
-            printf("%s----------TOP PROGRAM----------\n\n",KCYN);
+            printf("%s",BWHT);
+            printf("%s--------------------------------------------TOP PROGRAM--------------------------------------------\n\n\n",KBLK);
             printf(RESET);
             // printing the uptime
             int* upt = getUptimes();
             if(upt!=NULL)
             {   
                 // printing the uptime in proper format
-                printf("UpTime \t: %d:",upt[0]);
+                printf("UpTime \t\t: ");
+                printf(FBLD);
+                printf(KBLU);
+                printf(upt[0]<10?"0":"");
+                printf("%d:",upt[0]);
                 printf(upt[1]<10?"0":"");
                 printf("%d:",upt[1]);
                 printf(upt[2]<10?"0":"");
                 printf("%d\n",upt[2]);
+                printf(RESET);
             }
 
             //printing the idle percentage
-            printf("Idle \t\t: %d%%\n",upt[3]);
+            {
+                printf("Idle \t\t: ");
+                printf(FBLD);
+                if(upt[3]>80)
+                    printf(KGRN);
+                else if(upt[3]>20)
+                    printf(KWHT);
+                else
+                    printf(KRED);
+                printf("%d%%\n",upt[3]);
+                printf(RESET);
+            }
 
             // ptinting the number of cores
             printf("Cores \t\t: %d\n",num_cores);
@@ -712,13 +785,20 @@ int main()
                 char bat_status[20];
                 int bat_percentage;
                 getBatteryStats(&bat_percentage,bat_status,bat_level);
-                printf("Bat\t\t: %s - %d%% \n\t\t  (%s)\n",bat_status,bat_percentage,bat_level);
+                printf("Bat\t\t:");
+                if(bat_percentage<20 && strcmp("Discharging",bat_status)==0)
+                {
+                    printf(KRED);
+                    printf(FBLN);
+                }
+                printf(" %s - %d%% \n\t\t  (%s)\n",bat_status,bat_percentage,bat_level);
+                printf(RESET);
             }
             printf("\n\n");
             // ****************************Process Details******************************
             printf("%s%s",BGRN,KBLK);
             // printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
-            printf("PID     USER    PRI     NI      VIR(mb) RES(mb) STATE CPU%%      TIME+   PROGRAM        \n");
+            printf("PID     USER    PRI     NI      VIR(mb) RES(mb) STATE CPU%%      TIME+           PROGRAM            \n");
             printf(RESET);
             DIR* dr = opendir("/proc");
             if(dr==NULL)
@@ -780,4 +860,10 @@ int main2()
     printf("the number is %d\n",num);
     return 0;
 }
+
+// int main()
+// {
+//     getUsers();
+//     return 0;
+// }
 

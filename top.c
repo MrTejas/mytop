@@ -280,6 +280,14 @@ void displayProcess1(proc P)
     }
 }
 
+// n-tab
+void giveSpaces(char* s, int n)
+{
+    int len = strlen(s);
+    ll diff = n-len;
+    for(int x=0;x<diff;x++)
+        printf(" ");
+}
 
 // returns battery level, percentage and charging/discharging state
 void getBatteryStats(int* percentage, char* charging, char* level)
@@ -470,6 +478,7 @@ void displayProcess(proc P)
                 printf("%.2f",mb/1024);
                 printf("G\t");
                 printf("%s",KCYN);
+                mb/=1024;
             }
             else
             {
@@ -477,6 +486,7 @@ void displayProcess(proc P)
                 printf("%.2f",(mb/(1024*1024)));
                 printf("T\t");
                 printf("%s",KCYN);
+                mb/=(1024*1024);
             }
         }
         {
@@ -490,7 +500,7 @@ void displayProcess(proc P)
         }
         {
             printf("%s",KWHT);
-            printf("%s\t",P->state);
+            printf("%s     ",P->state);
         }
         {
             printf("%s",KWHT);
@@ -520,6 +530,37 @@ void displayProcess(proc P)
         printf("\n");
 
     }
+}
+
+float* getCPUusage()
+{
+    FILE* cpustat;
+    cpustat = fopen("/proc/stat","r");
+    if(cpustat==NULL)
+    {
+        printf("could not open file /proc/stat\n");
+        return NULL;
+    }
+    float* ar = (float*)malloc(sizeof(float)*(num_cores+1));
+    char line[256];
+    for(int x=0;x<=num_cores;x++)
+    {
+        fgets(line,sizeof(line),cpustat);
+        // printf("line fetched : ");
+        int val[7];
+        char buf[10];
+        sscanf(line,"%s %d %d %d %d %d %d %d",buf,&val[0],&val[1],&val[2],&val[3],&val[4],&val[5],&val[6]);
+        int tot = 0;
+        for(int y=0;y<7;y++)
+        {
+            tot+=val[y];
+            // printf("%d\t",val[y]);
+        }
+        // printf("\n");
+        float per = (val[3]*100)/((float)tot);
+        ar[x]=100-per;
+    }
+    return ar;
 }
 
 
@@ -583,7 +624,7 @@ int main()
             // ****************************Process Details******************************
             printf("%s%s",BGRN,KBLK);
             // printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
-            printf("PID     USER    PRI     NI      VIR(mb) RES(mb) STATE   CPU%%    TIME+   PROGRAM        \n");
+            printf("PID     USER    PRI     NI      VIR(mb) RES(mb) STATE CPU%%      TIME+   PROGRAM        \n");
             printf(RESET);
             DIR* dr = opendir("/proc");
             if(dr==NULL)
@@ -644,4 +685,16 @@ int main2()
 
     printf("the number is %d\n",num);
     return 0;
+}
+
+int main3()
+{
+    num_cores = getNumCores();
+    float* ar;
+    ar = getCPUusage();
+    printf("total %% = %f\n",ar[0]);
+    for(int x=1;x<num_cores+1;x++)
+    {
+        printf("core %d:\t%f\n",x-1,ar[x]);
+    }
 }

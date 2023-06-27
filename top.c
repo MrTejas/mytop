@@ -16,6 +16,28 @@
 #define KMAG  "\033[35m"
 #define KCYN  "\033[36m"
 #define KWHT  "\033[37m"
+#define KBLK  "\033[30m"
+
+#define BBLK    "\033[0;40m"	
+#define BRED    "\033[0;41m"	
+#define BGRN    "\033[0;42m"	
+#define BYEL    "\033[0;43m"	
+#define BBLU    "\033[0;44m"	
+#define BMAG    "\033[0;45m"	
+#define BCYN    "\033[0;46m"	
+#define BWHT    "\033[0;47m"	
+
+#define FREG    "\033[0;31m"	
+#define FBLD    "\033[1;31m"	
+#define FLIN    "\033[2;31m"	
+#define FITA    "\033[3;31m"	
+#define FUND    "\033[4;31m"	
+#define FBLN    "\033[5;31m"	
+#define FREV    "\033[6;31m"	
+#define FBCK    "\033[7;31m"	
+#define FINV    "\033[8;31m"	
+
+#define RESET   "\033[0m"
 
 // bytes to gigs convertor const
 #define BTOG 1048576
@@ -145,7 +167,7 @@ void updateProcess(int pid, proc P)
     
     // fp = fopen("/proc/4378/stat","r");
 
-    printf("ch3\n");
+    // printf("ch3\n");
 
     fclose(fp);
     FILE* fpp = fopen(path,"r");
@@ -154,20 +176,21 @@ void updateProcess(int pid, proc P)
     int count=0;  
 
     fscanf (fpp, "%lld", &val);  
-    printf("ck4\n");
+    // printf("ck4\n");
+    
     fscanf (fpp, "%s", strr);
     fscanf (fpp, "%s", strr);
 
 
     // for calculating the cpu percentage
-    printf("ck10\n");
+    // printf("ck10\n");
     ld process_utime,process_stime,process_starttime;
     ld ticks = sysconf( _SC_CLK_TCK );
     // printf("ticks = %Lf\n",ticks);
     FILE* ut = fopen("/proc/uptime","r");
     ld system_uptime;
     fscanf(ut,"%Lf",&system_uptime);
-    printf("system_uptime = %Lf\n",system_uptime);
+    // printf("system_uptime = %Lf\n",system_uptime);
     fclose(ut);
 
 
@@ -233,7 +256,7 @@ void updateProcess(int pid, proc P)
     
 }
 
-void displayProcess(proc P)
+void displayProcess1(proc P)
 {
     if(P!=NULL)
     {
@@ -307,6 +330,8 @@ int getNumCores()
         strncpy(found,line,8);
         if(strcmp(found,target)==0)
         {
+            // line = 'siblings : 8'
+            // following statement finds the integer in the line
             sscanf(line,"%*[^0123456789]%d",&cores);
             break;
         }
@@ -374,16 +399,128 @@ int* getUptimes()
     fscanf(ut,"%f",&idle_time);
     int* ret_val = (int*)malloc(3*sizeof(int));
 
-    ret_val[0] = (int)(up_time/(60*60));
-    ret_val[1] = (int)(up_time/60) - (60*ret_val[0]);
-    ret_val[2] = (int)(up_time - (60*ret_val[1]) - (60*60*ret_val[0]));
-    ret_val[3] = (int)(((idle_time/num_cores)/up_time)*100);
+    ret_val[0] = (int)(up_time/(60*60)); // hours
+    ret_val[1] = (int)(up_time/60) - (60*ret_val[0]); // minutes
+    ret_val[2] = (int)(up_time - (60*ret_val[1]) - (60*60*ret_val[0])); // seconds
+    ret_val[3] = (int)(((idle_time/num_cores)/up_time)*100); // idle percentage
     
     fclose(ut);
     return ret_val;
 }
 
+int isNumber(char* name)
+{
+    int n = strlen(name);
+    for(int x=0;x<n;x++)
+    {
+        if(name[x]-'0'<0 || name[x]-'0'>9)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
 
+void displayProcess(proc P)
+{
+    if(P->virt>=0 && P->res>=0)
+    {
+        {
+            printf("%s",KWHT);
+            printf("%d\t",P->pid);
+        }
+        {
+            printf("%s",KBLU);
+            printf("%d\t",P->user_id);
+        }
+        {
+            if(P->priority==20)
+            {
+                printf("%s",KWHT);
+                printf("%d\t",P->priority);
+            }
+            else
+            {
+                printf("%s",KCYN);
+                printf("%d\t",P->priority);
+            }
+        }
+        {
+            if(P->nice<0)
+            {
+                printf("%s",KRED);
+                printf("%d\t",P->nice);
+            }
+            else
+            {
+                printf("%s",KNRM);
+                printf("%d\t",P->nice);
+            }
+        }
+        {
+            printf("%s",KCYN);
+            float mb = (P->virt/(float)1024);
+            if(mb<1024)
+            {
+                printf("%.2f\t",mb);
+            }
+            else if((mb/1024.0)<1024)
+            {
+                printf("%s",KWHT);
+                printf("%.2f",mb/1024);
+                printf("G\t");
+                printf("%s",KCYN);
+            }
+            else
+            {
+                printf("%s",KRED);
+                printf("%.2f",(mb/(1024*1024)));
+                printf("T\t");
+                printf("%s",KCYN);
+            }
+        }
+        {
+            float mb = (P->res/(float)1024);
+            if(mb<1024)
+                printf("%.2f\t",mb);
+            else if((mb/1024.0)<1024)
+                printf("%.2fG\t",mb/1024);
+            else
+                printf("%.2fT\t",(mb/(1024*1024)));
+        }
+        {
+            printf("%s",KWHT);
+            printf("%s\t",P->state);
+        }
+        {
+            printf("%s",KWHT);
+            printf("%.2f\t",P->cpu);
+        }
+        {
+            printf("%s",KWHT);
+            int up_time = P->time;
+            int val0 = (int)(up_time/(60*60)); // hours
+            int val1 = (int)(up_time/60) - (60*val0); // minutes
+            int val2 = (int)(up_time - (60*val1) - (60*60*val0)); // seconds
+
+            printf("%d:",val0);
+            printf(val1<10?"0":"");
+            printf("%d:",val1);
+            printf(val2<10?"0":"");
+            printf("%d",val2);
+
+            printf("\t");
+            
+        }
+        {
+            printf("%s",KGRN);
+            printf("%s",P->name);
+            printf("%s",KNRM);
+        }
+        printf("\n");
+
+    }
+}
 
 
 // main method
@@ -403,46 +540,51 @@ int main()
         if(clock()%(refresh_rate*CLOCKS_PER_SEC)==0)
         {
             system("clear");
-            printf("----------%sTOP PROGRAM----------\n\n",KCYN);
+            printf("%s----------TOP PROGRAM----------\n\n",KCYN);
 
             // printing the uptime
-            int* ar = getUptimes();
-            if(ar!=NULL)
+            int* upt = getUptimes();
+            if(upt!=NULL)
             {   
-                printf("UpTime :\t%d:",ar[0]);
-                printf(ar[1]<10?"0":"");
-                printf("%d:",ar[1]);
-                printf(ar[2]<10?"0":"");
-                printf("%d\n",ar[2]);
+                // printing the uptime in proper format
+                printf("UpTime :\t%d:",upt[0]);
+                printf(upt[1]<10?"0":"");
+                printf("%d:",upt[1]);
+                printf(upt[2]<10?"0":"");
+                printf("%d\n",upt[2]);
             }
 
             //printing the idle percentage
-            printf("Idle :\t\t%d%%\n",ar[3]);
+            printf("Idle :\t\t%d%%\n",upt[3]);
 
             // ptinting the number of cores
             printf("Cores :\t\t%d\n",num_cores);
 
             // printing RAM and swap info
-            ll* mem = getMemInfo();
-            float rt = ((float)mem[0])/BTOG;
-            float ru = ((float)(mem[0]-mem[1])/BTOG);
-            float swt = ((float)mem[2])/BTOG;
-            float swu = ((float)(mem[2]-mem[3])/BTOG);
-            printf("Memory used :\t%.2f/%.2f GB\n",ru,rt);
-            printf("Swap used   :\t%.2f/%.2f GB\n",swu,swt);
+            {
+                ll* mem = getMemInfo();
+                float rt = ((float)mem[0])/BTOG; //mem_total
+                float ru = ((float)(mem[0]-mem[1])/BTOG); //mem_used
+                float swt = ((float)mem[2])/BTOG; //swap_total
+                float swu = ((float)(mem[2]-mem[3])/BTOG); //swap_used
+                printf("Memory used :\t%.2f/%.2f GB\n",ru,rt);
+                printf("Swap used   :\t%.2f/%.2f GB\n",swu,swt);
+            }
 
             // battery stats
-            char bat_level[20];
-            char bat_status[20];
-            int bat_percentage;
-            getBatteryStats(&bat_percentage,bat_status,bat_level);
-            printf("Battery Stats : %s - %d%% (%s)\n",bat_status,bat_percentage,bat_level);
-
+            {
+                char bat_level[20];
+                char bat_status[20];
+                int bat_percentage;
+                getBatteryStats(&bat_percentage,bat_status,bat_level);
+                printf("Battery Stats : %s - %d%% (%s)\n",bat_status,bat_percentage,bat_level);
+            }
 
             // ****************************Process Details******************************
-            printf("\n\n");
-            printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
-            
+            printf("%s%s",BGRN,KBLK);
+            // printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
+            printf("PID     USER    PRI     NI      VIR(mb) RES(mb) STATE   CPU%%    TIME+   PROGRAM        \n");
+            printf(RESET);
             DIR* dr = opendir("/proc");
             if(dr==NULL)
             {
@@ -451,9 +593,21 @@ int main()
             }
 
             struct dirent* de;
-            while((de = readdir(dr))!=NULL)
+            while((de = readdir(dr))!=NULL /*&& isdigit(de->d_name)*/)
             {
-                printf("%s\n",de->d_name);
+                if(isNumber(de->d_name))
+                {
+                    int pid_num;
+                    char* ptr;
+                    // sscanf(de->d_name,"%*[^0123456789]%d",&pid_num);
+                    pid_num = (int)strtol(de->d_name,&ptr,10);
+                    // printf("pid num = %d\t",pid_num);
+                    proc P = createProcess(pid_num);
+                    updateProcess(pid_num,P);
+                    displayProcess(P);
+                }
+                // printf("%s",de->d_name);
+                // printf("\n");
             }
             closedir(dr);
         }
@@ -470,10 +624,24 @@ int main1()
     printf("\33[?25h");
     // proc P = (proc)malloc(sizeof(struct process));
     printf("ck1\n");
-    proc P = createProcess(1876);
+    proc P = createProcess(3774);
     printf("ck2\n");
-    updateProcess(1876,P);
+    updateProcess(3774,P);
     displayProcess(P);
     return 0;
 
+}
+
+int main2()
+{
+    int ret = isNumber("123523");
+    printf("%d\n",ret);
+
+    int num = 12;
+    char* ptr;
+    num = (int)strtol("123523",&ptr,10);
+    // sscanf("123523","%*[^0123456789]%d",&num);
+
+    printf("the number is %d\n",num);
+    return 0;
 }

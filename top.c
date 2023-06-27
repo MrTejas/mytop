@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <dirent.h>
+#include <wchar.h>
+#include <locale.h>
 
 // defining colours
 #define KNRM  "\033[0m"
@@ -38,6 +40,14 @@
 #define FINV    "\033[8;31m"	
 
 #define RESET   "\033[0m"
+
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
+#define moveup(x) printf("\033[%dA",(x)) // Move up X lines;
+#define movedown(x) printf("\033[%dB",(x)) // Move down X lines;
+#define moveright(x) printf("\033[%dC",(x)) // Move right X column;
+#define moveleft(x) printf("\033[%dD",(x)) // Move left X column;
+#define cls() printf("\033[2J") // Clear screen
+
 
 // bytes to gigs convertor const
 #define BTOG 1048576
@@ -560,7 +570,88 @@ float* getCPUusage()
         float per = (val[3]*100)/((float)tot);
         ar[x]=100-per;
     }
+    fclose(cpustat);
     return ar;
+}
+
+void displayCPU()
+{
+
+    setlocale(LC_ALL, "en_US.UTF-8");
+    wchar_t box = 0x2592;
+    int max_bar=8;
+    
+    // num_cores = getNumCores();
+    float* ar;
+    ar = getCPUusage();
+    float max=0;
+    for(int x=0;x<=num_cores;x++)
+    {
+        if(ar[x]>max)
+            max=ar[x];
+    }
+
+    int X=83,Y=12;
+    gotoxy(X,Y);
+    printf("AVG");
+    moveup(1);
+    moveleft(3);
+    printf("%s",KCYN);
+    printf("%.1f%%",ar[0]);
+    printf("%s",KNRM);
+    moveup(1);
+    moveleft(4);
+
+    printf("%s",KGRN);
+    for(int x=1;x<=max_bar*(ar[0]/max);x++)
+    {
+        printf("%lc", box);
+        moveup(1);
+        moveleft(1);
+    }
+    printf("%s",KNRM);
+
+
+    for(int x=1;x<num_cores+1;x++)
+    {
+    // printf("here %f",max_bar*(ar[x]/(float)max));
+        X-=6,Y=12;
+        gotoxy(X,Y);
+        
+        printf("core%d",x);
+        moveup(1);
+        moveleft(5);
+        printf("%s",KBLU);
+        printf("%.1f%%",ar[x]);
+        printf("%s",KNRM);
+        moveup(1);
+        moveleft(4);
+        if(ar[x]==max)
+        {
+            printf("%s",KRED);
+        }
+        else
+        {
+            printf("%s",KBLU);
+        }
+        for(int y=1;y<=max_bar*(ar[x]/(float)max);y++)
+        {
+            printf("%lc", box);
+            moveup(1);
+            moveleft(1);
+        }
+        printf("%s",KNRM);
+
+        // printf("core %d:\t%f\n",x-1,ar[x]);
+    }
+    
+    // moveup(1);
+    // moveleft(1);
+    // printf("%lc", box);
+    
+    // printf("total %% = %f\n",ar[0]);
+    gotoxy(1,3);
+    // printf("lala\n");
 }
 
 
@@ -575,20 +666,23 @@ int main()
     
     // initializing the clock for infinite loop
     int val = clock();
-
+    displayCPU();
     while(1)
     {
         if(clock()%(refresh_rate*CLOCKS_PER_SEC)==0)
         {
             system("clear");
+            displayCPU();
+            // gotoxy(1,1);
+            printf(FLIN);
             printf("%s----------TOP PROGRAM----------\n\n",KCYN);
-
+            printf(RESET);
             // printing the uptime
             int* upt = getUptimes();
             if(upt!=NULL)
             {   
                 // printing the uptime in proper format
-                printf("UpTime :\t%d:",upt[0]);
+                printf("UpTime \t: %d:",upt[0]);
                 printf(upt[1]<10?"0":"");
                 printf("%d:",upt[1]);
                 printf(upt[2]<10?"0":"");
@@ -596,10 +690,10 @@ int main()
             }
 
             //printing the idle percentage
-            printf("Idle :\t\t%d%%\n",upt[3]);
+            printf("Idle \t\t: %d%%\n",upt[3]);
 
             // ptinting the number of cores
-            printf("Cores :\t\t%d\n",num_cores);
+            printf("Cores \t\t: %d\n",num_cores);
 
             // printing RAM and swap info
             {
@@ -608,8 +702,8 @@ int main()
                 float ru = ((float)(mem[0]-mem[1])/BTOG); //mem_used
                 float swt = ((float)mem[2])/BTOG; //swap_total
                 float swu = ((float)(mem[2]-mem[3])/BTOG); //swap_used
-                printf("Memory used :\t%.2f/%.2f GB\n",ru,rt);
-                printf("Swap used   :\t%.2f/%.2f GB\n",swu,swt);
+                printf("Memory used \t: %.2f/%.2f GB\n",ru,rt);
+                printf("Swap used   \t: %.2f/%.2f GB\n",swu,swt);
             }
 
             // battery stats
@@ -618,9 +712,9 @@ int main()
                 char bat_status[20];
                 int bat_percentage;
                 getBatteryStats(&bat_percentage,bat_status,bat_level);
-                printf("Battery Stats : %s - %d%% (%s)\n",bat_status,bat_percentage,bat_level);
+                printf("Bat\t\t: %s - %d%% \n\t\t  (%s)\n",bat_status,bat_percentage,bat_level);
             }
-
+            printf("\n\n");
             // ****************************Process Details******************************
             printf("%s%s",BGRN,KBLK);
             // printf("PID\tUSER\tPRI\tNI\tRES\tSTATE\tCPU%%\tMEM%%\tTIME\tCOMMAND\n");
@@ -687,14 +781,3 @@ int main2()
     return 0;
 }
 
-int main3()
-{
-    num_cores = getNumCores();
-    float* ar;
-    ar = getCPUusage();
-    printf("total %% = %f\n",ar[0]);
-    for(int x=1;x<num_cores+1;x++)
-    {
-        printf("core %d:\t%f\n",x-1,ar[x]);
-    }
-}

@@ -1,25 +1,10 @@
-
 #include <stdio.h>
-#include <dirent.h>
-  
-int main(void)
-{         
-    struct dirent *de;  // Pointer for directory entry
-  
-    // opendir() returns a pointer of DIR type. 
-    DIR *dr = opendir("/proc");
-  
-    if (dr == NULL)  // opendir returns NULL if couldn't open directory
-    {
-        printf("Could not open current directory" );
-        return 0;
-    }
-  
-    // Refer http://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html
-    // for readdir()
-    while ((de = readdir(dr)) != NULL)
-            printf("%s\n", de->d_name);
-  
-    closedir(dr);    
+#include <wchar.h>
+#include <locale.h>
+
+int main(void) {
+    setlocale(LC_ALL, "en_US.UTF-8");
+    wchar_t box = 0x2592;
+    wprintf(L"%lc\n", box);  // or simply printf("%lc\n", box);
     return 0;
 }
